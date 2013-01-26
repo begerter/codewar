@@ -21,10 +21,7 @@ from xml.etree import ElementTree as ET
 
 NAME = "Amnesia"
 SCHOOL = "Harvey Mudd College"
-<<<<<<< HEAD
-=======
 data = None
->>>>>>> origin/master
 
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
