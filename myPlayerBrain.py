@@ -75,7 +75,7 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-        calcdata(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        data = calcdata(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
         move = calcpath(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
         if move:
           sendOrders(self, **move)
