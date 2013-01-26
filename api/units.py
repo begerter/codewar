@@ -69,7 +69,7 @@ class Player(object):
         return "%s; numDelivered:%r" % (self.name, len(self.passengersDelivered))
 
     def __eq__(self, other):
-        if instanceof(other, Player) and other.guid == self.guid:
+        if isinstance(other, Player) and other.guid == self.guid:
             return True
         else:
             return False
@@ -199,11 +199,19 @@ def updatePassengersFromXml (passengers, companies, element):
                 passenger.route.remove(passenger.destination)
         # set props based on waiting, travelling, done
         switch = psgrElement.get('status')
+		
         if   switch == "lobby":
-            passenger.lobby = [c for c in companies if c.name == psgrElement.get('lobby')][0]
-            passenger.car = None
+			cmpny = [c for c in companies if c.name == psgrElement.get('lobby')][0]
+			if passenger.lobby != cmpny:
+				passenger.lobby = cmpny
+				if not(passenger in passenger.lobby.passengers):
+								passenger.lobby.passengers.append(passenger)
+			passenger.car = None
+			
         elif switch == "travelling":
-            passenger.lobby = None
+			if passenger.lobby != None:
+				passenger.lobby.passengers.remove(passenger)
+				passenger.lobby = None
             # passenger.car set in Player update
         elif switch == "done":
             debug.trap()
