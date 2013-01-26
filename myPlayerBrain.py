@@ -13,13 +13,12 @@ import random
 import simpleAStar
 from calcdata import calc_data
 from calcpath import calc_path
-
 from api import units, map
 from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Guido von Rossum"
+NAME = "Guido vin Rossum"
 SCHOOL = "Windward U."
 TILE_WIDTH = 24
 data = None
@@ -165,7 +164,7 @@ class MyPlayerBrain(object):
         return count
             
     def calculatePathPlus1 (self, me, ptDest):
-        path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
+        path = list(self.gameMap.path(me.limo.tilePosition, ptDest)) # simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
         # add in leaving the bus stop so it has orders while we get the message
         # saying it got there and are deciding what to do next.
         if len(path) > 1:
@@ -194,7 +193,7 @@ class MyPlayerBrain(object):
         #random.shuffle(pickup)
         #return pickup
         return [p[0] for p in paths]
-
+        
     def findCampsite(self, me, players, passengers):
         """ if all people we can pick up are in cars, where do we go to wait for them 
             returns a destination """
@@ -203,8 +202,6 @@ class MyPlayerBrain(object):
         times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
                       self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
         return min(times)[1]
-
-        
 
 def sendOrders(brain, order, path, pickup):
     """Used to communicate with the server. Do not change this method!"""
