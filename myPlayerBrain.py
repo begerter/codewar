@@ -85,6 +85,17 @@ class MyPlayerBrain(object):
         # respond to multiple status messages simultaneously then you need to
         # split these out and synchronize access to the saved list objects.
 
+    def destination(self, player, passengers):
+        """ given a player, returns the bus stop we think they are going to """
+        # if we know their passenger, assume they are taking them to the destination
+        if player.limo.passenger != None:
+            return player.limo.passenger.destination
+
+        # otherwise, assume closest location with a possible passenger
+        poss_pass = self.allPickups(player, passengers)
+        poss_times = [(getTime(player.limo.tilePosition,p.lobby), p) for p in poss_pass]
+        return min(poss_times)[1].lobby
+
 
     def calculatePathPlus1 (self, me, ptDest):
         path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
