@@ -93,8 +93,12 @@ class Map(object):
               if between < self.distance(i,j):
                 self.dist[(i,j)] = (between, k)
     def distance(self, a, b):
+      if type(a) is MapSquare: a = a.loc
+      if type(b) is MapSquare: b = b.loc
       self.dist.get((self.squareOrDefault(a),self.squareOrDefault(b)), float("inf"))
     def path(self, a, b):
+      if type(a) is MapSquare: a = a.loc
+      if type(b) is MapSquare: b = b.loc
       if (a,b) not in self.dist:
         return None
       elif a == b:
