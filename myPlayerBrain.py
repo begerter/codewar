@@ -24,8 +24,6 @@ SCHOOL = "Windward U."
 TILE_WIDTH = 24
 SCHOOL = "Winward U."
 data = None
-
->>>>>>> 26ecf2a435b9eb914673016d9e9b2ec0ff8eacfc
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
     def __init__(self, name=NAME):
@@ -61,7 +59,6 @@ class MyPlayerBrain(object):
         self.companies = companies
         self.passengers = passengers
         self.client = client
-
         self.pickup = pickup = self.allPickups(me, passengers)
 
         # get the path from where we are to the dest.
@@ -78,11 +75,11 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-        global data
-        data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
-        move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
-        if move:
-          sendOrders(self, **move)
+        #global data
+        #data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        #move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        #if move:
+        #  sendOrders(self, *move)
         # bugbug - Framework.cs updates the object's in this object's Players,
         # Passengers, and Companies lists. This works fine as long as this app
         # is single threaded. However, if you create worker thread(s) or
@@ -98,22 +95,28 @@ class MyPlayerBrain(object):
             # to start your path from).
             if playerStatus != self.me:
                 return
-
+            
             ptDest = None
             pickup = []
+            
             if    status == "UPDATE":
                 return
             elif (status == "PASSENGER_NO_ACTION" or
                   status == "NO_PATH"):
                 if playerStatus.limo.passenger is None:
-                    pickup = self.allPickups(playerStatus, passengers)
+                    if len(pickup) == 0:
+                        pickup = self.findNextPickup(playerStatus, passengers)
+                    else:
+                        pickup = self.allPickups(playerStatus, passengers)
                     ptDest = pickup[0].lobby.busStop
                 else:
                     ptDest = playerStatus.limo.passenger.destination.busStop
             elif (status == "PASSENGER_DELIVERED" or
                   status == "PASSENGER_ABANDONED"):
-                playerStatus.passengersDelivered.append(pickup[0])
-                pickup = self.allPickups(playerStatus, passengers)
+                if len(pickup) == 0:
+                    pickup = self.findNextPickup(playerStatus, passengers)
+                else:    
+                    pickup = self.allPickups(playerStatus, passengers)
                 ptDest = pickup[0].lobby.busStop
             elif  status == "PASSENGER_REFUSED":
                 ptDest = random.choice(filter(lambda c: c != playerStatus.limo.passenger.destination,
@@ -121,6 +124,7 @@ class MyPlayerBrain(object):
             elif (status == "PASSENGER_DELIVERED_AND_PICKED_UP" or
                   status == "PASSENGER_PICKED_UP"):
                 pickup = self.allPickups(playerStatus, passengers)
+                lastPass = pickup[0]
                 ptDest = playerStatus.limo.passenger.destination.busStop
             else:
                 raise TypeError("unknown status %r", status)
@@ -168,15 +172,25 @@ class MyPlayerBrain(object):
             path.append(path[-2])
         return path
 
+    def findNextPickup (self, me, passengers):
+        print "No current people, sitting and waiting"
+        pickup = [p for p in passengers if (not p in me.passengersDelivered and
+                                            p != me.limo.passenger and
+                                            p.lobby is not None and p.destination is not None)]
+        paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me,p.destination.busStop)) +
+                  self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
+        paths.sort(key = lambda tup:tup[1])
+        return [p[0] for p in paths]
+
     def allPickups (self, me, passengers):
-            pickup = [p for p in passengers if (not p in me.passengersDelivered and
-                                                p != me.limo.passenger and
-                                                p.car is None and
-                                                p.lobby is not None and p.destination is not None)]
+        pickup = [p for p in passengers if (not p in me.passengersDelivered and
+                                            p != me.limo.passenger and
+                                            p.car is None and
+                                            p.lobby is not None and p.destination is not None)]
             
-            paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
-            paths.sort(key = lambda tup:tup[1])
-            #random.shuffle(pickup)
-            #return pickup
-            print paths[0][0].lobby.name
-            return [p[0] for p in paths]
+        paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me,p.destination.busStop)) +
+                  self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
+        paths.sort(key = lambda tup:tup[1])
+        #random.shuffle(pickup)
+        #return pickup
+        return [p[0] for p in paths]
