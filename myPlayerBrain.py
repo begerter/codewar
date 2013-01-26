@@ -11,14 +11,16 @@ No copyright claimed - do anything you want with this code.
 
 import random
 import simpleAStar
+from calcdata import calc_data
+from calcpath import calc_path
 from framework import sendOrders
 from api import units, map
 from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Guido van Rossum"
-SCHOOL = "Windward U."
+NAME = "Amnesia"
+SCHOOL = "Harvey Mudd College"
 
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
@@ -72,55 +74,16 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-
+        calcdata(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers)
+        move = calcpath(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers)
+        if move:
+          sendOrders(self, **move)
         # bugbug - Framework.cs updates the object's in this object's Players,
         # Passengers, and Companies lists. This works fine as long as this app
         # is single threaded. However, if you create worker thread(s) or
         # respond to multiple status messages simultaneously then you need to
         # split these out and synchronize access to the saved list objects.
 
-        try:
-            # bugbug - we return if not us because the below code is only for
-            # when we need a new path or our limo hits a bus stop. If you want
-            # to act on other players arriving at bus stops, you need to
-            # remove this. But make sure you use self.me, not playerStatus for
-            # the Player you are updating (particularly to determine what tile
-            # to start your path from).
-            if playerStatus != self.me:
-                return
-
-            ptDest = None
-            pickup = []
-            if    status == "UPDATE":
-                return
-            elif (status == "PASSENGER_NO_ACTION" or
-                  status == "NO_PATH"):
-                if playerStatus.limo.passenger is None:
-                    pickup = self.allPickups(playerStatus, passengers)
-                    ptDest = pickup[0].lobby.busStop
-                else:
-                    ptDest = playerStatus.limo.passenger.destination.busStop
-            elif (status == "PASSENGER_DELIVERED" or
-                  status == "PASSENGER_ABANDONED"):
-                pickup = self.allPickups(playerStatus, passengers)
-                ptDest = pickup[0].lobby.busStop
-            elif  status == "PASSENGER_REFUSED":
-                ptDest = random.choice(filter(lambda c: c != playerStatus.limo.passenger.destination,
-                    self.companies)).busStop
-            elif (status == "PASSENGER_DELIVERED_AND_PICKED_UP" or
-                  status == "PASSENGER_PICKED_UP"):
-                pickup = self.allPickups(playerStatus, passengers)
-                ptDest = playerStatus.limo.passenger.destination.busStop
-            else:
-                raise TypeError("unknown status %r", status)
-
-            # get the path from where we are to the dest.
-            path = self.calculatePathPlus1(playerStatus, ptDest)
-
-            sendOrders(self, "move", path, pickup)
-        except Exception as e:
-            printrap ("somefin' bad, foo'!")
-            raise e
 
     def calculatePathPlus1 (self, me, ptDest):
         path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
