@@ -13,15 +13,16 @@ import random
 import simpleAStar
 from calcdata import calc_data
 from calcpath import calc_path
-from framework import sendOrders
 from api import units, map
 from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Bob"
-SCHOOL = "Harvey Mudd College"
+NAME = "Guido van Rossum"
+SCHOOL = "Windward U."
+TILE_WIDTH = 24
 data = None
+
 
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
@@ -75,8 +76,9 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-        data = calcdata(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
-        move = calcpath(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        global data
+        data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
         if move:
           sendOrders(self, **move)
         # bugbug - Framework.cs updates the object's in this object's Players,
@@ -84,6 +86,50 @@ class MyPlayerBrain(object):
         # is single threaded. However, if you create worker thread(s) or
         # respond to multiple status messages simultaneously then you need to
         # split these out and synchronize access to the saved list objects.
+
+        try:
+            # bugbug - we return if not us because the below code is only for
+            # when we need a new path or our limo hits a bus stop. If you want
+            # to act on other players arriving at bus stops, you need to
+            # remove this. But make sure you use self.me, not playerStatus for
+            # the Player you are updating (particularly to determine what tile
+            # to start your path from).
+            if playerStatus != self.me:
+                return
+
+            ptDest = None
+            pickup = []
+            if    status == "UPDATE":
+                return
+            elif (status == "PASSENGER_NO_ACTION" or
+                  status == "NO_PATH"):
+                if playerStatus.limo.passenger is None:
+                    pickup = self.allPickups(playerStatus, passengers)
+                    ptDest = pickup[0].lobby.busStop
+                else:
+                    ptDest = playerStatus.limo.passenger.destination.busStop
+            elif (status == "PASSENGER_DELIVERED" or
+                  status == "PASSENGER_ABANDONED"):
+                playerStatus.passengersDelivered.append(pickup[0])
+                pickup = self.allPickups(playerStatus, passengers)
+                ptDest = pickup[0].lobby.busStop
+            elif  status == "PASSENGER_REFUSED":
+                ptDest = random.choice(filter(lambda c: c != playerStatus.limo.passenger.destination,
+                    self.companies)).busStop
+            elif (status == "PASSENGER_DELIVERED_AND_PICKED_UP" or
+                  status == "PASSENGER_PICKED_UP"):
+                pickup = self.allPickups(playerStatus, passengers)
+                ptDest = playerStatus.limo.passenger.destination.busStop
+            else:
+                raise TypeError("unknown status %r", status)
+
+            # get the path from where we are to the dest.
+            path = self.calculatePathPlus1(playerStatus, ptDest)
+
+            sendOrders(self, "move", path, pickup)
+        except Exception as e:
+            printrap ("somefin' bad, foo'!")
+            raise e
 
     def destination(self, player, passengers):
         """ given a player, returns the bus stop we think they are going to """
@@ -98,6 +144,34 @@ class MyPlayerBrain(object):
         return min(poss_times)[1].lobby
 
 
+    def calculateTime(self, me, path):
+        count = 0
+        speed = 0
+        distance = 0.0
+        for p in xrange(len(path)):
+            if p >= 2:
+                p1 = path[p-2]
+                p3 = path[p]
+                if p1[0] == p3[0] or p1[1] == p3[1]:
+                    while distance < TILE_WIDTH:
+                        speed = max(speed + 0.1,6)
+                        distance += speed
+                        count += 1
+                else:
+                    while distance < TILE_WIDTH:
+                        speed = max(speed + 0.1,3)
+                        distance += speed
+                        count += 1
+            else:
+                while distance < TILE_WIDTH:
+                        speed = max(speed + 0.1,6)
+                        distance += speed
+                        count += 1
+            while distance > TILE_WIDTH:
+                distance -= TILE_WIDTH
+        return count
+            
+
     def calculatePathPlus1 (self, me, ptDest):
         path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
         # add in leaving the bus stop so it has orders while we get the message
@@ -111,5 +185,15 @@ class MyPlayerBrain(object):
                                                 p != me.limo.passenger and
                                                 p.car is None and
                                                 p.lobby is not None and p.destination is not None)]
-            random.shuffle(pickup)
-            return pickup
+
+
+
+
+
+            paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
+            paths.sort(key = lambda tup:tup[1])
+            #random.shuffle(pickup)
+            #return pickup
+            print paths[0][0].lobby.name
+            return [p[0] for p in paths]
+
