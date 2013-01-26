@@ -19,7 +19,7 @@ from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Amnesia"
+NAME = "Bob"
 SCHOOL = "Harvey Mudd College"
 data = None
 
@@ -93,7 +93,8 @@ class MyPlayerBrain(object):
 
         # otherwise, assume closest location with a possible passenger
         poss_pass = self.allPickups(player, passengers)
-        poss_times = [(getTime(player.limo.tilePosition,p.lobby), p) for p in poss_pass]
+        poss_times = [(self.gameMap.distance(player.limo.tilePosition,p.lobby),\
+                           p) for p in poss_pass]
         return min(poss_times)[1].lobby
 
 
