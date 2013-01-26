@@ -1,3 +1,9 @@
+
+import random
+import simpleAStar
+from framework import sendOrders
+from api import units, map
+from debug import printrap
 # (Possibly) recalculate new path needed to make decision
 def calc_path(self, status, playerStatus, players, passengers, data, **kwargs):
         try:

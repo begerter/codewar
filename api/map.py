@@ -75,16 +75,17 @@ class Map(object):
         self.squares = squares
         self.dist = {}
         
+        print("Starting FW of %d/%d\n" % (self.width, self.height))
         locs = []
-        for i in len(self.width):
-          for j in len(self.height):
+        for i in range(self.width):
+          for j in range(self.height):
             this = self.squareOrDefault((i,j))
             if this and this.isDriveable():
               locs.append(this)
               self.dist[(this,this)] = (0,None)
               for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
                 other = self.squareOrDefault((i+di,j+dj))
-              if other and other.isDrivable():
+              if other and other.isDriveable():
                 self.dist[(this,other)] = (1, None)
         for k in locs:
           for i in locs:
@@ -95,7 +96,7 @@ class Map(object):
     def distance(self, a, b):
       if type(a) is MapSquare: a = a.loc
       if type(b) is MapSquare: b = b.loc
-      self.dist.get((self.squareOrDefault(a),self.squareOrDefault(b)), float("inf"))
+      return self.dist.get((self.squareOrDefault(a),self.squareOrDefault(b)), float("inf"))
     def path(self, a, b):
       if type(a) is MapSquare: a = a.loc
       if type(b) is MapSquare: b = b.loc
