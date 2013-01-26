@@ -1,5 +1,5 @@
 # (Possibly) recalculate new path needed to make decision
-def calc_path(self, status, playerStatus, players, passengers, **kwargs):
+def calc_path(self, status, playerStatus, players, passengers, data, **kwargs):
         try:
             # bugbug - we return if not us because the below code is only for
             # when we need a new path or our limo hits a bus stop. If you want

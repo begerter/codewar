@@ -21,6 +21,7 @@ from xml.etree import ElementTree as ET
 
 NAME = "Amnesia"
 SCHOOL = "Harvey Mudd College"
+data = None
 
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
@@ -74,8 +75,8 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-        calcdata(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers)
-        move = calcpath(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers)
+        calcdata(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        move = calcpath(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
         if move:
           sendOrders(self, **move)
         # bugbug - Framework.cs updates the object's in this object's Players,
