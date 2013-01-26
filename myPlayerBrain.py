@@ -22,8 +22,8 @@ from xml.etree import ElementTree as ET
 NAME = "Guido van Rossum"
 SCHOOL = "Windward U."
 TILE_WIDTH = 24
-SCHOOL = "Winward U."
 data = None
+
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
     def __init__(self, name=NAME):
