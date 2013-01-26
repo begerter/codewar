@@ -80,7 +80,7 @@ class MyPlayerBrain(object):
         data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
         move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
         if move:
-          sendOrders(self, **move)
+          sendOrders(self, *move)
         # bugbug - Framework.cs updates the object's in this object's Players,
         # Passengers, and Companies lists. This works fine as long as this app
         # is single threaded. However, if you create worker thread(s) or
