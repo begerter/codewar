@@ -11,6 +11,8 @@ No copyright claimed - do anything you want with this code.
 
 import random
 import simpleAStar
+from calcdata import calc_data
+from calcpath import calc_path
 from framework import sendOrders
 from api import units, map
 from debug import printrap
@@ -20,6 +22,10 @@ from xml.etree import ElementTree as ET
 NAME = "Guido van Rossum"
 SCHOOL = "Windward U."
 TILE_WIDTH = 24
+SCHOOL = "Winward U."
+data = None
+
+>>>>>>> 26ecf2a435b9eb914673016d9e9b2ec0ff8eacfc
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
     def __init__(self, name=NAME):
@@ -72,7 +78,11 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-
+        global data
+        data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        if move:
+          sendOrders(self, **move)
         # bugbug - Framework.cs updates the object's in this object's Players,
         # Passengers, and Companies lists. This works fine as long as this app
         # is single threaded. However, if you create worker thread(s) or

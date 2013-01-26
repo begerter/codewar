@@ -73,7 +73,42 @@ class Map(object):
         for company in companies:
             squares[company.busStop[0]][company.busStop[1]].setCompany(company)
         self.squares = squares
-
+        self.dist = {}
+        
+        print("Starting FW of %d/%d\n" % (self.width, self.height))
+        locs = []
+        for i in range(self.width):
+          for j in range(self.height):
+            this = self.squareOrDefault((i,j))
+            if this and this.isDriveable():
+              locs.append(this)
+              self.dist[(this,this)] = (0,None)
+              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
+                other = self.squareOrDefault((i+di,j+dj))
+              if other and other.isDriveable():
+                self.dist[(this,other)] = (1, None)
+        for k in locs:
+          for i in locs:
+            for j in locs:
+              between = self.distance(i,k) + self.distance(k,j)
+              if between < self.distance(i,j):
+                self.dist[(i,j)] = (between, k)
+    def distance(self, a, b):
+      if type(a) is MapSquare: a = a.loc
+      if type(b) is MapSquare: b = b.loc
+      return self.dist.get((self.squareOrDefault(a),self.squareOrDefault(b)), float("inf"))
+    def path(self, a, b):
+      if type(a) is MapSquare: a = a.loc
+      if type(b) is MapSquare: b = b.loc
+      if (a,b) not in self.dist:
+        return None
+      elif a == b:
+        return (a)
+      else:
+        k = self.dist((a,b))[1]
+        if k is None:
+          return (a,b)
+        return self.path(a,k) + self.path(k,b)[1:]
     def squareOrDefault(self, point):
         """Return the requested point or None if off the map."""
         if (point[0] < 0 or point[1] < 0 or
@@ -97,6 +132,9 @@ class MapSquare(object):
 
         """
         self.type = element.get('type')
+        self.x = element.get('x')
+        self.y = element.get('y')
+        self.loc = (self.x, self.y)
         assert self.type in TYPE
         if self.isDriveable():
             self.direction = element.get('direction')

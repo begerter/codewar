@@ -55,8 +55,8 @@ class Player(object):
         self.name = element.get('name')
         self.limo = Limo( (int(element.get('limo-x')), int(element.get('limo-y'))),
                            int(element.get('limo-angle')))
-        self.pickup = pickup
-        self.passengersDelivered = passes
+        self.pickup = pickup if pickup else []
+        self.passengersDelivered = passes if passes else []
         self.score = score
 
     def __repr__(self):
@@ -92,7 +92,7 @@ class Limo(object):
         """
         self.tilePosition = tilePosition
         self.angle = angle
-        self.path = path
+        self.path = path if path else []
         self.passenger = passenger
 
     def __str__(self):
@@ -165,7 +165,7 @@ def updatePlayersFromXml (players, passengers, element):
         else:
             player.limo.passenger = None
         # add most recent delivery if this is the first time we're told.
-        psgrName = element.get('last-delivered')
+        psgrName = playerElement.get('last-delivered')
         if psgrName is not None:
             passenger = [p for p in passengers if p.name == psgrName][0]
             if passenger not in player.passengersDelivered:
