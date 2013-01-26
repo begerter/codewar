@@ -75,11 +75,11 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-        #global data
-        #data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
-        #move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
-        #if move:
-        #  sendOrders(self, *move)
+        global data
+        data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        if move:
+          sendOrders(self, *move)
         # bugbug - Framework.cs updates the object's in this object's Players,
         # Passengers, and Companies lists. This works fine as long as this app
         # is single threaded. However, if you create worker thread(s) or
@@ -194,3 +194,20 @@ class MyPlayerBrain(object):
         #random.shuffle(pickup)
         #return pickup
         return [p[0] for p in paths]
+
+def sendOrders(brain, order, path, pickup):
+    """Used to communicate with the server. Do not change this method!"""
+    xml = ET.Element(order)
+    if len(path) > 0:
+        brain.me.limo.path = path # update our saved Player to match new settings
+        sb = [str(point[0]) + ',' + str(point[1]) + ';' for point in path]
+        elem = ET.Element('path')
+        elem.text = ''.join(sb)
+        xml.append(elem)
+    if len(pickup) > 0:
+        brain.me.pickup = pickup # update our saved Player to match new settings
+        sb = [psngr.name + ';' for psngr in pickup]
+        elem = ET.Element('pick-up')
+        elem.text = ''.join(sb)
+        xml.append(elem)
+    brain.client.sendMessage(ET.tostring(xml))
