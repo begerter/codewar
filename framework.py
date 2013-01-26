@@ -15,7 +15,7 @@ from xml.etree import ElementTree as ET
 import tcpClient, myPlayerBrain, api
 from debug import trap, printrap, bugprint
 
-DEFAULT_ADDRESS = "127.0.0.1" #local machine
+DEFAULT_ADDRESS = "134.173.46.36" #local machine
 
 
 class Framework(object):
@@ -175,23 +175,6 @@ class Framework(object):
             av_el.text = base64.b64encode(avatar)
             root.append(av_el)
         self.client.sendMessage(ET.tostring(root))
-
-def sendOrders(brain, order, path, pickup):
-    """Used to communicate with the server. Do not change this method!"""
-    xml = ET.Element(order)
-    if len(path) > 0:
-        brain.me.limo.path = path # update our saved Player to match new settings
-        sb = [str(point[0]) + ',' + str(point[1]) + ';' for point in path]
-        elem = ET.Element('path')
-        elem.text = ''.join(sb)
-        xml.append(elem)
-    if len(pickup) > 0:
-        brain.me.pickup = pickup # update our saved Player to match new settings
-        sb = [psngr.name + ';' for psngr in pickup]
-        elem = ET.Element('pick-up')
-        elem.text = ''.join(sb)
-        xml.append(elem)
-    brain.client.sendMessage(ET.tostring(xml))
 
 if __name__ == '__main__':
     printrap(sys.argv[0], breakOn=not sys.argv[0].endswith("framework.py"))

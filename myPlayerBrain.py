@@ -18,7 +18,7 @@ from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Guido van Rossum"
+NAME = "Guido van Rossum2"
 SCHOOL = "Windward U."
 TILE_WIDTH = 24
 data = None
@@ -197,3 +197,19 @@ class MyPlayerBrain(object):
             print paths[0][0].lobby.name
             return [p[0] for p in paths]
 
+def sendOrders(brain, order, path, pickup):
+    """Used to communicate with the server. Do not change this method!"""
+    xml = ET.Element(order)
+    if len(path) > 0:
+        brain.me.limo.path = path # update our saved Player to match new settings
+        sb = [str(point[0]) + ',' + str(point[1]) + ';' for point in path]
+        elem = ET.Element('path')
+        elem.text = ''.join(sb)
+        xml.append(elem)
+    if len(pickup) > 0:
+        brain.me.pickup = pickup # update our saved Player to match new settings
+        sb = [psngr.name + ';' for psngr in pickup]
+        elem = ET.Element('pick-up')
+        elem.text = ''.join(sb)
+        xml.append(elem)
+    brain.client.sendMessage(ET.tostring(xml))
