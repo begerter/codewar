@@ -19,7 +19,7 @@ from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Guido van Rossum"
+NAME = "Guido vin Rossum"
 SCHOOL = "Windward U."
 TILE_WIDTH = 24
 data = None
@@ -165,7 +165,7 @@ class MyPlayerBrain(object):
         return count
             
     def calculatePathPlus1 (self, me, ptDest):
-        path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
+        path = list(self.gameMap.path(me.limo.tilePosition, ptDest)) # simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
         # add in leaving the bus stop so it has orders while we get the message
         # saying it got there and are deciding what to do next.
         if len(path) > 1:
