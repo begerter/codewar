@@ -19,7 +19,7 @@ from xml.etree import ElementTree as ET
 
 NAME = "Guido van Rossum"
 SCHOOL = "Windward U."
-
+TILE_WIDTH = 24
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
     def __init__(self, name=NAME):
@@ -102,6 +102,7 @@ class MyPlayerBrain(object):
                     ptDest = playerStatus.limo.passenger.destination.busStop
             elif (status == "PASSENGER_DELIVERED" or
                   status == "PASSENGER_ABANDONED"):
+                playerStatus.passengersDelivered.append(pickup[0])
                 pickup = self.allPickups(playerStatus, passengers)
                 ptDest = pickup[0].lobby.busStop
             elif  status == "PASSENGER_REFUSED":
@@ -122,6 +123,33 @@ class MyPlayerBrain(object):
             printrap ("somefin' bad, foo'!")
             raise e
 
+    def calculateTime(self, me, path):
+        count = 0
+        speed = 0
+        distance = 0.0
+        for p in xrange(len(path)):
+            if p >= 2:
+                p1 = path[p-2]
+                p3 = path[p]
+                if p1[0] == p3[0] or p1[1] == p3[1]:
+                    while distance < TILE_WIDTH:
+                        speed = max(speed + 0.1,6)
+                        distance += speed
+                        count += 1
+                else:
+                    while distance < TILE_WIDTH:
+                        speed = max(speed + 0.1,3)
+                        distance += speed
+                        count += 1
+            else:
+                while distance < TILE_WIDTH:
+                        speed = max(speed + 0.1,6)
+                        distance += speed
+                        count += 1
+            while distance > TILE_WIDTH:
+                distance -= TILE_WIDTH
+        return count
+            
     def calculatePathPlus1 (self, me, ptDest):
         path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
         # add in leaving the bus stop so it has orders while we get the message
@@ -135,5 +163,10 @@ class MyPlayerBrain(object):
                                                 p != me.limo.passenger and
                                                 p.car is None and
                                                 p.lobby is not None and p.destination is not None)]
-            random.shuffle(pickup)
-            return pickup
+            
+            paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
+            paths.sort(key = lambda tup:tup[1])
+            #random.shuffle(pickup)
+            #return pickup
+            print paths[0][0].lobby.name
+            return [p[0] for p in paths]
