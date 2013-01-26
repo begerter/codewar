@@ -19,8 +19,8 @@ from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Amnesia"
-SCHOOL = "Harvey Mudd College"
+NAME = "Guido van Rossum"
+SCHOOL = "Winward U."
 data = None
 
 class MyPlayerBrain(object):
