@@ -150,7 +150,7 @@ class Framework(object):
         client = self.client
 
         delay = .5
-        while True:
+        for _ in range(10):
             try:
                 if client is not None:
                     client.close()
