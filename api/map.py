@@ -75,24 +75,24 @@ class Map(object):
         self.squares = squares
         self.dist = {}
         
-        print("Starting FW of %d/%d\n" % (self.width, self.height))
-        locs = []
-        for i in range(self.width):
-          for j in range(self.height):
-            this = self.squareOrDefault((i,j))
-            if this and this.isDriveable():
-              locs.append(this)
-              self.dist[(this,this)] = (0,None)
-              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
-                other = self.squareOrDefault((i+di,j+dj))
-              if other and other.isDriveable():
-                self.dist[(this,other)] = (1, None)
-        for k in locs:
-          for i in locs:
-            for j in locs:
-              between = self.distance(i,k) + self.distance(k,j)
-              if between < self.distance(i,j):
-                self.dist[(i,j)] = (between, k)
+##        print("Starting FW of %d/%d\n" % (self.width, self.height))
+##        locs = []
+##        for i in range(self.width):
+##          for j in range(self.height):
+##            this = self.squareOrDefault((i,j))
+##            if this and this.isDriveable():
+##              locs.append(this)
+##              self.dist[(this,this)] = (0,None)
+##              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
+##                other = self.squareOrDefault((i+di,j+dj))
+##              if other and other.isDriveable():
+##                self.dist[(this,other)] = (1, None)
+##        for k in locs:
+##          for i in locs:
+##            for j in locs:
+##              between = self.distance(i,k) + self.distance(k,j)
+##              if between < self.distance(i,j):
+##                self.dist[(i,j)] = (between, k)
     def distance(self, a, b):
       if type(a) is MapSquare: a = a.loc
       if type(b) is MapSquare: b = b.loc

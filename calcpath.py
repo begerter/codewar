@@ -23,20 +23,26 @@ def calc_path(self, status, playerStatus, players, passengers, data, **kwargs):
             elif (status == "PASSENGER_NO_ACTION" or
                   status == "NO_PATH"):
                 if playerStatus.limo.passenger is None:
-                    pickup = self.allPickups(playerStatus, passengers)
+                    if len(pickup) == 0:
+                        pickup = self.findNextPickup(playerStatus, passengers, players)
+                    else:
+                        pickup = self.allPickups(playerStatus, passengers, players)
                     ptDest = pickup[0].lobby.busStop
                 else:
                     ptDest = playerStatus.limo.passenger.destination.busStop
             elif (status == "PASSENGER_DELIVERED" or
                   status == "PASSENGER_ABANDONED"):
-                pickup = self.allPickups(playerStatus, passengers)
+                if len(pickup) == 0:
+                    pickup = self.findNextPickup(playerStatus, passengers, players)
+                else:    
+                    pickup = self.allPickups(playerStatus, passengers, players)
                 ptDest = pickup[0].lobby.busStop
             elif  status == "PASSENGER_REFUSED":
                 ptDest = random.choice(filter(lambda c: c != playerStatus.limo.passenger.destination,
                     self.companies)).busStop
             elif (status == "PASSENGER_DELIVERED_AND_PICKED_UP" or
                   status == "PASSENGER_PICKED_UP"):
-                pickup = self.allPickups(playerStatus, passengers)
+                pickup = self.allPickups(playerStatus, passengers, players)
                 ptDest = playerStatus.limo.passenger.destination.busStop
             else:
                 raise TypeError("unknown status %r", status)
