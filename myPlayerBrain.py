@@ -74,11 +74,11 @@ class MyPlayerBrain(object):
         passengers -- The status of all passengers.
 
         """
-        global data
-        data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
-        move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
-        if move:
-          sendOrders(self, *move)
+        #global data
+        #data = calc_data(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        #move = calc_path(self=self, status=status, playerStatus=playerStatus, players=players, passengers=passengers, data=data)
+        #if move:
+        #  sendOrders(self, *move)
         # bugbug - Framework.cs updates the object's in this object's Players,
         # Passengers, and Companies lists. This works fine as long as this app
         # is single threaded. However, if you create worker thread(s) or
@@ -98,25 +98,25 @@ class MyPlayerBrain(object):
             ptDest = None
             pickup = []
             
-            if    status == "UPDATE":
+            if  status == "UPDATE":
                 return
             elif (status == "PASSENGER_NO_ACTION" or
                   status == "NO_PATH"):
                 if playerStatus.limo.passenger is None:
                     if len(pickup) == 0:
-                        pickup = self.findCampsite(playerStatus, passengers, players)
+                        ptDest = self.findCampsite(playerStatus, passengers, players)
                     else:
                         pickup = self.allPickups(playerStatus, passengers, players)
-                    ptDest = pickup[0].lobby.busStop
+                        ptDest = pickup[0].lobby.busStop
                 else:
                     ptDest = playerStatus.limo.passenger.destination.busStop
             elif (status == "PASSENGER_DELIVERED" or
                   status == "PASSENGER_ABANDONED"):
                 if len(pickup) == 0:
-                    pickup = self.findCampsite(playerStatus, passengers, players)
+                    ptDest = self.findCampsite(playerStatus, passengers, players)
                 else:    
                     pickup = self.allPickups(playerStatus, passengers, players)
-                ptDest = pickup[0].lobby.busStop
+                    ptDest = pickup[0].lobby.busStop
             elif  status == "PASSENGER_REFUSED":
                 ptDest = random.choice(filter(lambda c: c != playerStatus.limo.passenger.destination,
                     self.companies)).busStop
@@ -131,7 +131,7 @@ class MyPlayerBrain(object):
             path = self.calculatePathPlus1(playerStatus, ptDest)
 
             sendOrders(self, "move", path, pickup)
-        except Exception as e:
+        except TypeError as e:
             printrap ("somefin' bad, foo'!")
             raise e
 
@@ -209,11 +209,11 @@ class MyPlayerBrain(object):
                                                             and  p.lobby is not None
                                                             and p.destination is not None)]
         # times is the soonest we could pick somebody up at a destination
-        #times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
-        #              self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
-        #return min(times)[1]
-        paths = self.pickups(me,passengers,pickup,players)
-        return paths
+        times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
+                      self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
+        return min(times)[1]
+        #paths = self.pickups(me,passengers,pickup,players)
+        #return paths
 
     def canWeMakeIt(self, me, players, passengers, companies):
         """ return None if we can deliver our person, otehrwise return new destination"""

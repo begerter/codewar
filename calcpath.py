@@ -1,5 +1,5 @@
-
-import random import simpleAStar
+import random
+import simpleAStar
 
 from api import units, map
 from debug import printrap
@@ -23,7 +23,7 @@ def calc_path(self, status, playerStatus, players, passengers, data, **kwargs):
 	    elif (status == "PASSENGER_NO_ACTION" or
 		  status == "NO_PATH"):
 		if playerStatus.limo.passenger is None:
-		    if len(pickup) == 0:
+		    if len(pickupList) == 0:
 			pickupList = self.findCampsite(playerStatus, passengers, players)
 		    else:
 			pickupList = self.allPickups(playerStatus, passengers, players)
@@ -42,7 +42,7 @@ def calc_path(self, status, playerStatus, players, passengers, data, **kwargs):
 		    self.companies)).busStop
 	    elif (status == "PASSENGER_DELIVERED_AND_PICKED_UP" or
 		  status == "PASSENGER_PICKED_UP"):
-		pickup = self.allPickups(playerStatus, passengers, players)
+		pickupList = self.allPickups(playerStatus, passengers, players)
 		ptDest = playerStatus.limo.passenger.destination.busStop
 	    else:
 		raise TypeError("unknown status %r", status)
