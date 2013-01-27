@@ -164,7 +164,8 @@ class MyPlayerBrain(object):
         return count
             
     def calculatePathPlus1 (self, me, ptDest):
-        path = list(self.gameMap.path(me.limo.tilePosition, ptDest)) # simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
+        path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
+        #list(self.gameMap.path(me.limo.tilePosition, ptDest))
         # add in leaving the bus stop so it has orders while we get the message
         # saying it got there and are deciding what to do next.
         if len(path) > 1:
@@ -205,11 +206,15 @@ class MyPlayerBrain(object):
     def findCampsite(self, me, passengers, players):
         """ if all people we can pick up are in cars, where do we go to wait for them 
             returns a destination """
-        passe = [(p, p.destination) for p in passengers if (not p in me.passengersDelivered)]
+        passe = [(p, p.destination) for p in passengers if (not p in me.passengersDelivered
+                                                            and  p.lobby is not None
+                                                            and p.destination is not None)]
         # times is the soonest we could pick somebody up at a destination
-        times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
-                      self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
-        return min(times)[1]
+        #times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
+        #              self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
+        #return min(times)[1]
+        paths = self.pickups(me,passengers,pickup,players)
+        return paths
 
 def sendOrders(brain, order, path, pickup):
     """Used to communicate with the server. Do not change this method!"""

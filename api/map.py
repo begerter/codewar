@@ -133,35 +133,35 @@ class Map(object):
 ##              if self.dist[(i, k)] + self.dist[(k, j)] < self.dist[(i, j)]:
 ##                self.dist[(i,j)] = (self.dist[(i, k)] + self.dist[(k, j)], k)
 ##        print("Finished FW")
-
-    def distance(self, a, b):
-      if type(a) is not MapSquare: a = self.squareOrDefault(a)
-      if type(b) is not MapSquare: b = self.squareOrDefault(b)
-      print("Calculating distance between %s and %s" % (a.loc, b.loc))
-      if (a,b) not in self.dist:
-        print("Unknown distance")
-        if a is b:
-          print("Same location")
-          self.dist[(a,b)] = (0,None)
-        if not a or not b:
-          print("Inv  alid location")
-          self.dist[(a,b)] = (float("inf"),None)
-        print("a.neighbors = %s, b.neighbors = %s" % (a.neighbors, b.neighbors))
-        if len(a.neighbors) == 2:
-          best = (float("inf"), None)
-          for n in a.intersect:
-            print("Trying intersect %s" % (n.loc,))
-            if self.distance(a,n) + self.distance(n,b) < best[0]:
-              best = (self.distance(a,n) + self.distance(n,b), n)
-          self.dist[(a,b)] = best
-        elif len(b.neighbors) == 2:
-          best = (float("inf"), None)
-          for n in b.intersect:
-            print("Trying intersect %s" % (n.loc,))
-            if self.distance(a,n) + self.distance(n,b) < best[0]:
-              best = (self.distance(a,n) + self.distance(n,b), n)
-          self.dist[(a,b)] = best
-      return self.dist[(a, b)][0]
+##
+##    def distance(self, a, b):
+##      if type(a) is not MapSquare: a = self.squareOrDefault(a)
+##      if type(b) is not MapSquare: b = self.squareOrDefault(b)
+##      print("Calculating distance between %s and %s" % (a.loc, b.loc))
+##      if (a,b) not in self.dist:
+##        print("Unknown distance")
+##        if a is b:
+##          print("Same location")
+##          self.dist[(a,b)] = (0,None)
+##        if not a or not b:
+##          print("Inv  alid location")
+##          self.dist[(a,b)] = (float("inf"),None)
+##        print("a.neighbors = %s, b.neighbors = %s" % (a.neighbors, b.neighbors))
+##        if len(a.neighbors) == 2:
+##          best = (float("inf"), None)
+##          for n in a.intersect:
+##            print("Trying intersect %s" % (n.loc,))
+##            if self.distance(a,n) + self.distance(n,b) < best[0]:
+##              best = (self.distance(a,n) + self.distance(n,b), n)
+##          self.dist[(a,b)] = best
+##        elif len(b.neighbors) == 2:
+##          best = (float("inf"), None)
+##          for n in b.intersect:
+##            print("Trying intersect %s" % (n.loc,))
+##            if self.distance(a,n) + self.distance(n,b) < best[0]:
+##              best = (self.distance(a,n) + self.distance(n,b), n)
+##          self.dist[(a,b)] = best
+##      return self.dist[(a, b)][0]
     def path(self, a, b):
       if type(a) is not MapSquare: a = self.squareOrDefault(a)
       if type(b) is not MapSquare: b = self.squareOrDefault(b)
