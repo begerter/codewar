@@ -1,5 +1,6 @@
 
-import random import simpleAStar
+import random
+import simpleAStar
 
 from api import units, map
 from debug import printrap
