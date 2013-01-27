@@ -11,6 +11,7 @@ No copyright claimed - do anything you want with this code.
 from __future__ import print_function
 from __future__ import division
 
+import math
 import debug
 
 DIRECTION = {"NORTH_SOUTH":0, "EAST_WEST":1, "INTERSECTION":2,
@@ -74,113 +75,88 @@ class Map(object):
             squares[company.busStop[0]][company.busStop[1]].setCompany(company)
         self.squares = squares
         self.dist = {}
+        self.paths = {}
         
-
-##        print("Starting FW of %d/%d\n" % (self.width, self.height))
-##        locs = []
-##        for i in range(self.width):
-##          for j in range(self.height):
-##            this = self.squareOrDefault((i,j))
-##            if this and this.isDriveable():
-##              locs.append(this)
-##              self.dist[(this,this)] = (0,None)
-##              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
-##                other = self.squareOrDefault((i+di,j+dj))
-##              if other and other.isDriveable():
-##                self.dist[(this,other)] = (1, None)
-##        for k in locs:
-##          for i in locs:
-##            for j in locs:
-##              between = self.distance(i,k) + self.distance(k,j)
-##              if between < self.distance(i,j):
-##                self.dist[(i,j)] = (between, k)
-##
-##        locs = []
-##        for i in range(self.width):
-##          for j in range(self.height):
-##            this = self.squareOrDefault((i,j))
-##            if this and this.isDriveable():
-##              self.dist[(this,this)] = (0, None)
-##              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
-##                other = self.squareOrDefault((i+di,j+dj))
-##                if other and other.isDriveable():
-##                  this.neighbors.append(other)
-##              if len(this.neighbors) != 2:
-##                locs.append(this)
-##        
-##        for loc in locs:
-##          for n in loc.neighbors:
-##            last = loc
-##            cur = n
-##            dist = 1
-##            while len(cur.neighbors) == 2:
-##              self.dist[(loc,cur)] = (dist, None if loc is last else last)
-##              self.dist[(cur,loc)] = (dist, None if loc is last else last)
-##              cur.intersect.append(loc)
-##              last, cur = cur, [next for next in cur.neighbors if next is not last][0]
-##              dist += 1
-##            self.dist[(loc,cur)] = (dist, None if loc is last else last)
-##        
-##        print("Starting FW")
-##        for i in locs:
-##          self.dist[(i,i)] = (0, None)
-##          for j in locs:
-##            if (i,j) not in locs:
-##              self.dist[(i,j)] = (float("inf"), None)
-##        for k in locs:
-##          for i in locs:
-##            for j in locs:
-##              if self.dist[(i, k)] + self.dist[(k, j)] < self.dist[(i, j)]:
-##                self.dist[(i,j)] = (self.dist[(i, k)] + self.dist[(k, j)], k)
-##        print("Finished FW")
-##
-##    def distance(self, a, b):
-##      if type(a) is not MapSquare: a = self.squareOrDefault(a)
-##      if type(b) is not MapSquare: b = self.squareOrDefault(b)
-##      print("Calculating distance between %s and %s" % (a.loc, b.loc))
-##      if (a,b) not in self.dist:
-##        print("Unknown distance")
-##        if a is b:
-##          print("Same location")
-##          self.dist[(a,b)] = (0,None)
-##        if not a or not b:
-##          print("Inv  alid location")
-##          self.dist[(a,b)] = (float("inf"),None)
-##        print("a.neighbors = %s, b.neighbors = %s" % (a.neighbors, b.neighbors))
-##        if len(a.neighbors) == 2:
-##          best = (float("inf"), None)
-##          for n in a.intersect:
-##            print("Trying intersect %s" % (n.loc,))
-##            if self.distance(a,n) + self.distance(n,b) < best[0]:
-##              best = (self.distance(a,n) + self.distance(n,b), n)
-##          self.dist[(a,b)] = best
-##        elif len(b.neighbors) == 2:
-##          best = (float("inf"), None)
-##          for n in b.intersect:
-##            print("Trying intersect %s" % (n.loc,))
-##            if self.distance(a,n) + self.distance(n,b) < best[0]:
-##              best = (self.distance(a,n) + self.distance(n,b), n)
-##          self.dist[(a,b)] = best
-##      return self.dist[(a, b)][0]
+        locs = []
+        for i in range(self.width):
+          for j in range(self.height):
+            this = self.squareOrDefault((i,j))
+            if this and this.isDriveable():
+              self.dist[(this,this)] = (0, None)
+              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
+                other = self.squareOrDefault((i+di,j+dj))
+                if other and other.isDriveable():
+                  self.dist[this,other] = (1, None)
+                  self.dist[other,this] = (1, None)
+                  this.neighbors.append(other)
+              if len(this.neighbors) != 2:
+                locs.append(this)
+        
+        for loc in locs:
+          for n in loc.neighbors:
+            last = loc
+            cur = n
+            dist = 1
+            while len(cur.neighbors) == 2:
+              self.dist[(loc,cur)] = (dist, None if loc is last else last)
+              self.dist[(cur,loc)] = (dist, None if loc is last else last)
+              cur.intersect.append(loc)
+              last, cur = cur, [next for next in cur.neighbors if next is not last][0]
+              dist += 1
+            self.dist[(loc,cur)] = (dist, None if loc is last else last)
+            self.dist[(cur,loc)] = (dist, None if loc is last else last)
+        
+        print("Starting FW")
+        for i in locs:
+          self.dist[(i,i)] = (0, None)
+        for k in locs:
+          for i in locs:
+            for j in locs:
+              if (i,k) in self.dist and (k,j) in self.dist:
+                if (i,j) not in self.dist or self.dist[(i, k)][0] + self.dist[(k, j)][0] < self.dist[(i, j)][0]:
+                  self.dist[(i,j)] = (self.dist[(i, k)][0] + self.dist[(k, j)][0], k)
+        print("Finished FW")  
+    
+    def distance(self, a, b):
+      if type(a) is not MapSquare: a = self.squareOrDefault(a)
+      if type(b) is not MapSquare: b = self.squareOrDefault(b)
+      if (a,b) not in self.dist:
+        if a is b:
+          self.dist[(a,b)] = (0,None)
+        if not a or not b:
+          self.dist[(a,b)] = (float("inf"),None)
+        best = (float("inf"), None)
+        if len(a.neighbors) == 2:
+          for n in a.intersect:
+            if self.distance(a,n) + self.distance(n,b) < best[0]:
+              best = (self.distance(a,n) + self.distance(n,b), n)
+          self.dist[(a,b)] = best
+        if len(b.neighbors) == 2:
+          for n in b.intersect:
+            if self.distance(a,n) + self.distance(n,b) < best[0]:
+              best = (self.distance(a,n) + self.distance(n,b), n)
+          self.dist[(a,b)] = best
+      return self.dist[(a, b)][0]
+    
     def path(self, a, b):
       if type(a) is not MapSquare: a = self.squareOrDefault(a)
       if type(b) is not MapSquare: b = self.squareOrDefault(b)
-      print("Calculating path between %s and %s" % (a.loc, b.loc))
-      if (a,b) not in self.dist:
-        self.distance(a,b)
-      if (a,b) not in self.dist:
-        print("Cannot calculate distance")
-        return None
-      if a == b:
-        print("This is the path")
-        return (a.loc,)
-      else:
-        k = self.dist[(a,b)][1]
-        if k is None:
-          print("Neighbors")
-          return (a.loc,b.loc)
-        print("Calculate path between %s" % k)
-        return self.path(a.loc,k.loc) + self.path(k.loc,b.loc)[1:]
+      if (a,b) not in self.paths:
+        if (b,a) in self.paths:
+          self.paths[a,b] = tuple(reversed(self.paths[b,a]))
+        else:
+          if (a,b) not in self.dist:
+            self.distance(a,b)
+          if (a,b) not in self.dist:
+            self.paths[a,b] = None
+          elif a == b:
+            self.paths[a,b] = (a.loc,)
+          else:
+            k = self.dist[(a,b)][1]
+            if k is None:
+              return (a.loc,b.loc)
+            self.paths[a,b] = self.path(a.loc,k.loc) + self.path(k.loc,b.loc)[1:]
+      return self.paths[a,b]
     def squareOrDefault(self, point):
         """Return the requested point or None if off the map."""
         if (point[0] < 0 or point[1] < 0 or
