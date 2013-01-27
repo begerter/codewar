@@ -31,7 +31,7 @@ class MyPlayerBrain(object):
         #The player's avatar (looks in the same directory that this module is in).
         #Must be a 32 x 32 PNG file.
         try:
-            avatar = open("MyAvatar.png", "rb")
+            avatar = open("logo.png", "rb")
             avatar_str = b''
             for line in avatar:
                 avatar_str += line
@@ -104,19 +104,19 @@ class MyPlayerBrain(object):
                   status == "NO_PATH"):
                 if playerStatus.limo.passenger is None:
                     if len(pickup) == 0:
-                        ptDest = self.findCampsite(playerStatus, passengers, players)
+                        pickup = self.findCampsite(playerStatus, passengers, players)
                     else:
                         pickup = self.allPickups(playerStatus, passengers, players)
-                        ptDest = pickup[0].lobby.busStop
+                    ptDest = pickup[0].lobby.busStop
                 else:
                     ptDest = playerStatus.limo.passenger.destination.busStop
             elif (status == "PASSENGER_DELIVERED" or
                   status == "PASSENGER_ABANDONED"):
                 if len(pickup) == 0:
-                    ptDest = self.findCampsite(playerStatus, passengers, players)
+                    pickup = self.findCampsite(playerStatus, passengers, players)
                 else:    
                     pickup = self.allPickups(playerStatus, passengers, players)
-                    ptDest = pickup[0].lobby.busStop
+                ptDest = pickup[0].lobby.busStop
             elif  status == "PASSENGER_REFUSED":
                 ptDest = random.choice(filter(lambda c: c != playerStatus.limo.passenger.destination,
                     self.companies)).busStop
@@ -163,8 +163,7 @@ class MyPlayerBrain(object):
         return count
             
     def calculatePathPlus1 (self, me, ptDest):
-        path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
-        #list(self.gameMap.path(me.limo.tilePosition, ptDest))
+        path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)#list(self.gameMap.path(me.limo.tilePosition, ptDest))
         # add in leaving the bus stop so it has orders while we get the message
         # saying it got there and are deciding what to do next.
         if len(path) > 1:
@@ -205,15 +204,15 @@ class MyPlayerBrain(object):
     def findCampsite(self, me, passengers, players):
         """ if all people we can pick up are in cars, where do we go to wait for them 
             returns a destination """
-        passe = [(p, p.destination) for p in passengers if (not p in me.passengersDelivered
+        passe = [p for p in passengers if (not p in me.passengersDelivered
                                                             and  p.lobby is not None
                                                             and p.destination is not None)]
         # times is the soonest we could pick somebody up at a destination
-        times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
-                      self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
-        return min(times)[1]
-        #paths = self.pickups(me,passengers,pickup,players)
-        #return paths
+        #times = [(max(self.gameMap.distance(me.limo.tilePosition, p[1]),\
+        #              self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
+        #return min(times)[1]
+        paths = self.pickups(me,passengers,passe,players)
+        return [p[0] for p in paths]
 
     def canWeMakeIt(self, me, players, passengers, companies):
         """ return None if we can deliver our person, otehrwise return new destination"""
