@@ -13,7 +13,6 @@ import random
 import simpleAStar
 from calcdata import calc_data
 from calcpath import calc_path
-from framework import sendOrders
 from api import units, map
 from debug import printrap
 
@@ -24,6 +23,7 @@ SCHOOL = "The Diner at the Edge of the Universe"
 TILE_WIDTH = 24
 SCHOOL = "TDATEOTU"
 data = None
+
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
     def __init__(self, name=NAME):
@@ -105,7 +105,7 @@ class MyPlayerBrain(object):
                   status == "NO_PATH"):
                 if playerStatus.limo.passenger is None:
                     if len(pickup) == 0:
-                        pickup = self.findNextPickup(playerStatus, passengers, players)
+                        pickup = self.findCampsite(playerStatus, passengers, players)
                     else:
                         pickup = self.allPickups(playerStatus, passengers, players)
                     ptDest = pickup[0].lobby.busStop
@@ -114,7 +114,7 @@ class MyPlayerBrain(object):
             elif (status == "PASSENGER_DELIVERED" or
                   status == "PASSENGER_ABANDONED"):
                 if len(pickup) == 0:
-                    pickup = self.findNextPickup(playerStatus, passengers, players)
+                    pickup = self.findCampsite(playerStatus, passengers, players)
                 else:    
                     pickup = self.allPickups(playerStatus, passengers, players)
                 ptDest = pickup[0].lobby.busStop
@@ -164,20 +164,13 @@ class MyPlayerBrain(object):
         return count
             
     def calculatePathPlus1 (self, me, ptDest):
-        path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
+        path = list(self.gameMap.path(me.limo.tilePosition, ptDest)) # simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
         # add in leaving the bus stop so it has orders while we get the message
         # saying it got there and are deciding what to do next.
         if len(path) > 1:
             path.append(path[-2])
         return path
 
-    def findNextPickup (self, me, passengers, players):
-        print "No current people, sitting and waiting"
-        pickup = [p for p in passengers if (not p in me.passengersDelivered and
-                                            p != me.limo.passenger and
-                                            p.lobby is not None and p.destination is not None)]
-        paths = self.pickups(me,passengers,pickup,players)
-        return [p[0] for p in paths]
     def allPickups (self, me, passengers, players):
         pickup = [p for p in passengers if (not p in me.passengersDelivered and
                                             p != me.limo.passenger and
@@ -194,7 +187,7 @@ class MyPlayerBrain(object):
             if num > -1:
                 paths.pop(num)
         return [p[0] for p in paths]
-    
+
     def oppPickups (self, me, passengers, players):
         pickup = [p for p in passengers if (not p in me.passengersDelivered and
                                             p != me.limo.passenger and
@@ -208,6 +201,15 @@ class MyPlayerBrain(object):
                   + self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
         paths.sort(key = lambda tup:tup[1])                    
         return paths
+        
+    def findCampsite(self, me, passengers, players):
+        """ if all people we can pick up are in cars, where do we go to wait for them 
+            returns a destination """
+        passe = [(p, p.destination) for p in passengers if (not p in me.passengersDelivered)]
+        # times is the soonest we could pick somebody up at a destination
+        times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
+                      self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
+        return min(times)[1]
 
 def sendOrders(brain, order, path, pickup):
     """Used to communicate with the server. Do not change this method!"""
