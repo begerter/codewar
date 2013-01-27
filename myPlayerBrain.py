@@ -18,10 +18,9 @@ from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Zaphrod Beeblebrox"
-SCHOOL = "The Diner at the Edge of the Universe"
+NAME = "Guido von Rossum"
+SCHOOL = "Windward U."
 TILE_WIDTH = 24
-SCHOOL = "TDATEOTU"
 data = None
 
 class MyPlayerBrain(object):
@@ -215,6 +214,29 @@ class MyPlayerBrain(object):
         #return min(times)[1]
         paths = self.pickups(me,passengers,pickup,players)
         return paths
+
+    def canWeMakeIt(self, me, players, passengers, companies):
+        """ return None if we can deliver our person, otehrwise return new destination"""
+        going = [p for p in passengers if p.destination == me.passenger.destination and \
+                     p in me.passenger.enemies]
+        there = [(0,p) for p in passengers if p.lobby == me.passenger.destination and \
+                     p in me.passenger.enemies]
+        our_time = self.gameMap.distance(me.passenger.destination, me.limo.tilePosition)
+        times = there + [(self.gameMap.distance(p.destination, p.car.tilePosition), p) for p in going]
+        times = [x for x in times if x[0] < our_time]
+
+        if len(times) == 0:
+            return
+        
+        # get possible drop off locations
+        bad_places = [p.lobby for p in passengers if p in me.passenger.enemies and p.lobby]
+        good_places = [(self.gameMap.distance(me.limo.tilePosition, c), c) for c in companies if c not in bad_places]
+
+        return min(good_places)[1]
+        
+        
+        
+                
 
 def sendOrders(brain, order, path, pickup):
     """Used to communicate with the server. Do not change this method!"""
