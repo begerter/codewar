@@ -13,16 +13,17 @@ import random
 import simpleAStar
 from calcdata import calc_data
 from calcpath import calc_path
+from framework import sendOrders
 from api import units, map
 from debug import printrap
 
 from xml.etree import ElementTree as ET
 
-NAME = "Guido von Rossum"
+NAME = "CArl Rossum"
 SCHOOL = "Windward U."
 TILE_WIDTH = 24
+SCHOOL = "Winward U."
 data = None
-
 class MyPlayerBrain(object):
     """The Python AI class.  This class must have the methods setup and gameStatus."""
     def __init__(self, name=NAME):
@@ -58,7 +59,7 @@ class MyPlayerBrain(object):
         self.companies = companies
         self.passengers = passengers
         self.client = client
-        self.pickup = pickup = self.allPickups(me, passengers, allPlayers)
+        self.pickup = pickup = self.allPickups(me, passengers)
 
         # get the path from where we are to the dest.
         path = self.calculatePathPlus1(me, pickup[0].lobby.busStop)
@@ -104,25 +105,26 @@ class MyPlayerBrain(object):
                   status == "NO_PATH"):
                 if playerStatus.limo.passenger is None:
                     if len(pickup) == 0:
-                        pickup = self.findCampsite(playerStatus, passengers, players)
+                        pickup = self.findNextPickup(playerStatus, passengers)
                     else:
-                        pickup = self.allPickups(playerStatus, passengers, players)
+                        pickup = self.allPickups(playerStatus, passengers)
                     ptDest = pickup[0].lobby.busStop
                 else:
                     ptDest = playerStatus.limo.passenger.destination.busStop
             elif (status == "PASSENGER_DELIVERED" or
                   status == "PASSENGER_ABANDONED"):
                 if len(pickup) == 0:
-                    pickup = self.findCampsite(playerStatus, passengers, players)
+                    pickup = self.findNextPickup(playerStatus, passengers)
                 else:    
-                    pickup = self.allPickups(playerStatus, passengers, players)
+                    pickup = self.allPickups(playerStatus, passengers)
                 ptDest = pickup[0].lobby.busStop
             elif  status == "PASSENGER_REFUSED":
                 ptDest = random.choice(filter(lambda c: c != playerStatus.limo.passenger.destination,
                     self.companies)).busStop
             elif (status == "PASSENGER_DELIVERED_AND_PICKED_UP" or
                   status == "PASSENGER_PICKED_UP"):
-                pickup = self.allPickups(playerStatus, passengers, players)
+                pickup = self.allPickups(playerStatus, passengers)
+                lastPass = pickup[0]
                 ptDest = playerStatus.limo.passenger.destination.busStop
             else:
                 raise TypeError("unknown status %r", status)
@@ -164,79 +166,39 @@ class MyPlayerBrain(object):
             
     def calculatePathPlus1 (self, me, ptDest):
         path = simpleAStar.calculatePath(self.gameMap, me.limo.tilePosition, ptDest)
-        #list(self.gameMap.path(me.limo.tilePosition, ptDest))
+        print("Normal: ")
+        print(path)
+        path = list(self.gameMap.path(me.limo.tilePosition, ptDest))
+        print("Andrews: ")
+        print(path)
         # add in leaving the bus stop so it has orders while we get the message
         # saying it got there and are deciding what to do next.
         if len(path) > 1:
             path.append(path[-2])
         return path
 
-    def allPickups (self, me, passengers, players):
+    def findNextPickup (self, me, passengers):
+        print "No current people, sitting and waiting"
         pickup = [p for p in passengers if (not p in me.passengersDelivered and
                                             p != me.limo.passenger and
-                                            p.car is None and
                                             p.lobby is not None and p.destination is not None)]
-        paths = self.pickups(me,passengers,pickup,players)
-        for player in players:
-            opp = self.oppPickups(player,passengers,players)
-            num = -1
-            for i in range(len(paths)):
-                if opp[0][0] == paths[i][0] and opp[0][1] < paths[i][1]:
-                    num = i
-                    break
-            if num > -1:
-                paths.pop(num)
+        paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me,p.destination.busStop)) +
+                  self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
+        paths.sort(key = lambda tup:tup[1])
         return [p[0] for p in paths]
 
-    def oppPickups (self, me, passengers, players):
+    def allPickups (self, me, passengers):
         pickup = [p for p in passengers if (not p in me.passengersDelivered and
                                             p != me.limo.passenger and
                                             p.car is None and
                                             p.lobby is not None and p.destination is not None)]
-        paths = self.pickups(me,passengers,pickup,players)
-        return paths
-    
-    def pickups (self, me, passengers, pickup, players):       
-        paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me,p.destination.busStop))
-                  + self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
-        paths.sort(key = lambda tup:tup[1])                    
-        return paths
-        
-    def findCampsite(self, me, passengers, players):
-        """ if all people we can pick up are in cars, where do we go to wait for them 
-            returns a destination """
-        passe = [(p, p.destination) for p in passengers if (not p in me.passengersDelivered
-                                                            and  p.lobby is not None
-                                                            and p.destination is not None)]
-        # times is the soonest we could pick somebody up at a destination
-        #times = [(max(self.gameMap.distance(me.car.tilePosition, p[1]),\
-        #              self.gameMap.distance(p[0].car.tilePosition, p[1])), p[1]) for p in passe]
-        #return min(times)[1]
-        paths = self.pickups(me,passengers,pickup,players)
-        return paths
-
-    def canWeMakeIt(self, me, players, passengers, companies):
-        """ return None if we can deliver our person, otehrwise return new destination"""
-        going = [p for p in passengers if p.destination == me.passenger.destination and \
-                     p in me.passenger.enemies]
-        there = [(0,p) for p in passengers if p.lobby == me.passenger.destination and \
-                     p in me.passenger.enemies]
-        our_time = self.gameMap.distance(me.passenger.destination, me.limo.tilePosition)
-        times = there + [(self.gameMap.distance(p.destination, p.car.tilePosition), p) for p in going]
-        times = [x for x in times if x[0] < our_time]
-
-        if len(times) == 0:
-            return
-        
-        # get possible drop off locations
-        bad_places = [p.lobby for p in passengers if p in me.passenger.enemies and p.lobby]
-        good_places = [(self.gameMap.distance(me.limo.tilePosition, c), c) for c in companies if c not in bad_places]
-
-        return min(good_places)[1]
-        
-        
-        
-                
+            
+        paths = [(p,self.calculateTime(me,self.calculatePathPlus1(me,p.destination.busStop)) +
+                  self.calculateTime(me,self.calculatePathPlus1(me, p.lobby.busStop))) for p in pickup]
+        paths.sort(key = lambda tup:tup[1])
+        #random.shuffle(pickup)
+        #return pickup
+        return [p[0] for p in paths]
 
 def sendOrders(brain, order, path, pickup):
     """Used to communicate with the server. Do not change this method!"""

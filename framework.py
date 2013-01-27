@@ -15,7 +15,7 @@ from xml.etree import ElementTree as ET
 import tcpClient, myPlayerBrain, api
 from debug import trap, printrap, bugprint
 
-DEFAULT_ADDRESS = "134.173.46.36" #local machine
+DEFAULT_ADDRESS = "127.0.0.1" #local machine
 
 
 class Framework(object):
@@ -197,4 +197,3 @@ if __name__ == '__main__':
     printrap(sys.argv[0], breakOn=not sys.argv[0].endswith("framework.py"))
     framework = Framework(sys.argv[1:])
     framework._run()
-
