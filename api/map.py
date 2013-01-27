@@ -75,44 +75,65 @@ class Map(object):
         self.squares = squares
         self.dist = {}
         
-        locs = []
-        for i in range(self.width):
-          for j in range(self.height):
-            this = self.squareOrDefault((i,j))
-            if this and this.isDriveable():
-              self.dist[(this,this)] = (0, None)
-              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
-                other = self.squareOrDefault((i+di,j+dj))
-                if other and other.isDriveable():
-                  this.neighbors.append(other)
-              if len(this.neighbors) != 2:
-                locs.append(this)
-        
-        for loc in locs:
-          for n in loc.neighbors:
-            last = loc
-            cur = n
-            dist = 1
-            while len(cur.neighbors) == 2:
-              self.dist[(loc,cur)] = (dist, None if loc is last else last)
-              self.dist[(cur,loc)] = (dist, None if loc is last else last)
-              cur.intersect.append(loc)
-              last, cur = cur, [next for next in cur.neighbors if next is not last][0]
-              dist += 1
-            self.dist[(loc,cur)] = (dist, None if loc is last else last)
-        
-        print("Starting FW")
-        for i in locs:
-          self.dist[(i,i)] = (0, None)
-          for j in locs:
-            if (i,j) not in locs:
-              self.dist[(i,j)] = (float("inf"), None)
-        for k in locs:
-          for i in locs:
-            for j in locs:
-              if self.dist[(i, k)] + self.dist[(k, j)] < self.dist[(i, j)]:
-                self.dist[(i,j)] = (self.dist[(i, k)] + self.dist[(k, j)], k)
-        print("Finished FW")
+
+##        print("Starting FW of %d/%d\n" % (self.width, self.height))
+##        locs = []
+##        for i in range(self.width):
+##          for j in range(self.height):
+##            this = self.squareOrDefault((i,j))
+##            if this and this.isDriveable():
+##              locs.append(this)
+##              self.dist[(this,this)] = (0,None)
+##              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
+##                other = self.squareOrDefault((i+di,j+dj))
+##              if other and other.isDriveable():
+##                self.dist[(this,other)] = (1, None)
+##        for k in locs:
+##          for i in locs:
+##            for j in locs:
+##              between = self.distance(i,k) + self.distance(k,j)
+##              if between < self.distance(i,j):
+##                self.dist[(i,j)] = (between, k)
+##
+##        locs = []
+##        for i in range(self.width):
+##          for j in range(self.height):
+##            this = self.squareOrDefault((i,j))
+##            if this and this.isDriveable():
+##              self.dist[(this,this)] = (0, None)
+##              for di,dj in ((0,1),(1,0),(-1,0),(0,-1)):
+##                other = self.squareOrDefault((i+di,j+dj))
+##                if other and other.isDriveable():
+##                  this.neighbors.append(other)
+##              if len(this.neighbors) != 2:
+##                locs.append(this)
+##        
+##        for loc in locs:
+##          for n in loc.neighbors:
+##            last = loc
+##            cur = n
+##            dist = 1
+##            while len(cur.neighbors) == 2:
+##              self.dist[(loc,cur)] = (dist, None if loc is last else last)
+##              self.dist[(cur,loc)] = (dist, None if loc is last else last)
+##              cur.intersect.append(loc)
+##              last, cur = cur, [next for next in cur.neighbors if next is not last][0]
+##              dist += 1
+##            self.dist[(loc,cur)] = (dist, None if loc is last else last)
+##        
+##        print("Starting FW")
+##        for i in locs:
+##          self.dist[(i,i)] = (0, None)
+##          for j in locs:
+##            if (i,j) not in locs:
+##              self.dist[(i,j)] = (float("inf"), None)
+##        for k in locs:
+##          for i in locs:
+##            for j in locs:
+##              if self.dist[(i, k)] + self.dist[(k, j)] < self.dist[(i, j)]:
+##                self.dist[(i,j)] = (self.dist[(i, k)] + self.dist[(k, j)], k)
+##        print("Finished FW")
+
     def distance(self, a, b):
       if type(a) is not MapSquare: a = self.squareOrDefault(a)
       if type(b) is not MapSquare: b = self.squareOrDefault(b)
